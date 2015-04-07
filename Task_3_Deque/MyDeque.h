@@ -1,11 +1,16 @@
 #pragma once
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 template <class T>
 class MyDeque
 {
 public:
+	
+	MyDeque() : begin(nullptr), end(nullptr), dequeSize(0) {}
+	~MyDeque() { clear(); }
+
 	void push_back(T const& element);
 	void push_front(T const& element);
 
@@ -18,45 +23,63 @@ public:
 	T const& pop_back();
 	T const& pop_front();
 
-	T const& operator [](size_t index);
+	T const& operator [](int index);
+	void clear();
 
-	friend std::ostream& operator << (std::ostream& out, MyDeque* deque);
-	friend std::ostream& operator << (std::ostream& out, MyDeque deque);
+	operator std::string();
+	
+	friend std::ostream& operator << (std::ostream& out, MyDeque<T>& deque);
 
 private:
-	std::vector<T> elements_;
 
+	struct MyDequeNode {
+		T data;
+		MyDequeNode* next;
+
+		MyDequeNode(const T& newData, MyDequeNode* nextNode) : data(newData), next(nextNode) {}
+	};
+
+	MyDequeNode *begin, *end;
+	size_t dequeSize;
 };
 
 template <class T>
 void MyDeque<T>::push_back(T const& element)
 {
-	elements_.push_back(element);
-	std::cout << "I added " << element << " to back\n";
+	if (end == nullptr) {
+		push_front(element);
+	}
+	else
+	{
+		MyDequeNode *newNode = new MyDequeNode(element, nullptr);
+		end->next = newNode;
+		end = newNode;
+		dequeSize++;
+		std::cout << "I added " << element << " to back\n";
+	}	
 }
-
 
 template <class T>
 void MyDeque<T>::push_front(T const& element)
 {
-	elements_.insert(elements_.begin(), element);
+	begin = new MyDequeNode(element, begin);
+	if (begin->next == nullptr)
+		end = begin;
+	dequeSize++;
 	std::cout << "I added " << element << " to front\n";
 }
 
 template <class T>
 bool MyDeque<T>::empty()
 {
-	bool test = elements_.size() == 0;
-	std::cout << "Emptiness: " << test << '\n';
-
-	return elements_.size() == 0;
+	return dequeSize == 0;
 }
 
 template <class T>
 size_t MyDeque<T>::size()
 {
-	std::cout << elements_.size() << '\n';
-	return elements_.size();
+	std::cout << "The size is " << dequeSize << "\n";
+	return dequeSize;
 }
 
 template <class T>
@@ -65,8 +88,7 @@ T const& MyDeque<T>::front()
 	if (empty())
 		throw std::invalid_argument("Can't invoke FRONT on an empty deque");
 
-	std::cout << elements_[0] << '\n';
-	return elements_[0];
+	return begin->data;
 }
 
 template <class T>
@@ -75,8 +97,7 @@ T const& MyDeque<T>::back()
 	if (empty())
 		throw std::invalid_argument("Can't invoke BACK on an empty deque");
 
-	std::cout << elements_[elements_.size() - 1] << '\n';
-	return elements_[elements_.size() - 1];
+	return end->data;
 }
 
 template <class T>
@@ -85,9 +106,18 @@ T const& MyDeque<T>::pop_back()
 	if (empty())
 		throw std::invalid_argument("Can't invoke POP_BACK on an empty deque");
 
-	T const& result = elements_[elements_.size() - 1];
-	elements_.erase(elements_.end() - 1);
-	return result;
+	MyDequeNode *temp = begin;
+	while (temp != end && temp->next != end)
+		temp = temp->next;
+	
+	T data = end->data;
+	delete end;
+	temp->next = nullptr;
+	if (temp != end)
+		end = temp;
+	
+	dequeSize--;
+	return data;	
 }
 
 template <class T>
@@ -96,30 +126,73 @@ T const& MyDeque<T>::pop_front()
 	if (empty())
 		throw std::invalid_argument("Can't invoke POP_FRONT on an empty deque");
 
-	T const& result = elements_[0];
-	elements_.erase(elements_.begin());
-	return result;
+	MyDequeNode *temp = begin;
+	begin = begin->next;
+	if (begin == nullptr)
+		end = nullptr;
+
+	T data = temp->data;
+	delete temp;
+	dequeSize--;
+	return data;
 }
 
 template <class T>
-T const& MyDeque<T>::operator[](size_t index)
+T const& MyDeque<T>::operator[](int index)
 {
-	if (index < 0 || index >= elements_.size())
-		throw std::invalid_argument("Index must be correct");
+	if (empty())
+		throw std::invalid_argument("Can't invoke indexer on an empty deque");
+	if (index < 0)
+		throw std::invalid_argument("Index can't be negative");
 
-	return elements_[index];
+	MyDequeNode* temp = begin;
+	for (int i = 0; i <= index - 1; i++)
+	{
+		if (temp->next != nullptr)
+			temp = temp->next;
+		else
+			throw std::invalid_argument("Index was bigger than deque's length");
+	}
+
+	return temp->data;
 }
 
 template <class T>
-std::ostream& operator << (std::ostream& out, MyDeque<T>* deque) {
-	for (size_t i = 0; i < deque->size(); i++)
-		out << (*deque)[i] << " ";
-	return out;
+void MyDeque<T>::clear()
+{
+	while (!empty())
+	{
+		pop_front();
+	}
 }
 
 template <class T>
-std::ostream& operator << (std::ostream& out, MyDeque<T> deque) {
-	for (size_t i = 0; i < deque.size(); i++)
-		out << deque[i] << " ";
+MyDeque<T>::operator std::basic_string<char>()
+{
+	if (empty())
+		return "";
+
+	std::stringstream ss;
+	MyDequeNode* temp = begin;
+	while (temp)
+	{
+		ss << temp->data;
+		ss << ' ';
+		temp = temp->next;
+	}
+	return ss.str();
+}
+
+template <class T>
+std::ostream& operator << (std::ostream& out, MyDeque<T>& deque) {
+	if (deque.empty())
+	{
+		return out;
+	}
+	
+	for (int i = 0; i < deque.size(); i++)
+	{
+		out << deque[i] << ' ';
+	}
 	return out;
 }

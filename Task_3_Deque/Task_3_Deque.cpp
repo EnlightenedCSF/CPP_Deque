@@ -1,7 +1,5 @@
-// Task_3_Deque.cpp : Defines the entry point for the console application.
-//
-
 #include <vector>
+#include <string>
 
 #include "MyDeque.h"
 
@@ -17,24 +15,40 @@ int main()
 	a.push_back(7);
 	a.push_back(8);
 
-	std::cout << "---------------------------\n";
-
-	std::cout << a.pop_front();
-
-	/*a.push_front(7);
-	a.push_back(8);
-
-	a.size();
-	a.empty();
-	std::cout << "\n\n";
+	std::cout << "---------------------------\n\n";
 	
-	a.front();
-	a.back();*/
+	std::cout << a.pop_front() << '\n';
+	std::cout << a.pop_front() << '\n';
+	std::cout << a.pop_back() << '\n';
+	std::cout << a.pop_back() << '\n';
+	std::cout << a.size();
 
+	std::cout << "---------------------------\n\n";
+	MyDeque<char*> b;
+	b.push_back("The");
+	b.push_back("quick");
+	b.push_back("brown");
+	b.push_back("fox");
+	b.push_back("jumps");
+	b.push_back("over");
+	b.push_back("the");
+	b.push_back("lazy");
+	b.push_back("dog.");
+	while (b.size() > 5)
+	{
+		std::cout << b.pop_back() << '\n';
+	}
+	std::cout << "---------------------------\n";
+	for (int i = 0; i < b.size(); i++)
+	{
+		std::cout << b[i] << '\n';
+	}
 
+	std::cout << (std::string)b;
 
-	std::vector<int> a1;
-	//a1.insert();
+	/*auto n = new MyDeque<double>();
+	n->push_front(15);
+	std::cout << "\n" << n;*/
 
 	system("pause");
 	return 0;
